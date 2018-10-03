@@ -31,6 +31,7 @@ contract Hopeful {
 
 contract VatLike {
     function dai (bytes32) public view returns (int);
+    function sin (bytes32) public view returns (int);
     function heal(bytes32,bytes32,int) public;
 }
 
@@ -49,7 +50,6 @@ contract Vow is DSNote {
 
     mapping (uint48 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt
-    uint256 public Woe;   // pre-auction 'bad' debt
     uint256 public Ash;   // on-auction debt
 
     uint256 public wait;  // flop delay
@@ -92,10 +92,13 @@ contract Vow is DSNote {
 
     // --- Indicators ---
     function Awe() public view returns (uint) {
-        return add(add(Sin, Woe), Ash);
+        return uint(VatLike(vat).sin(bytes32(address(this)))) / ONE;
     }
     function Joy() public view returns (uint) {
         return uint(VatLike(vat).dai(bytes32(address(this)))) / ONE;
+    }
+    function Woe() public view returns (uint) {
+        return sub(sub(Awe(), Sin), Ash);
     }
 
     // --- Repentance ---
@@ -106,14 +109,12 @@ contract Vow is DSNote {
     function flog(uint48 era_) public note {
         require(add(era_, wait) <= era());
         Sin = sub(Sin, sin[era_]);
-        Woe = add(Woe, sin[era_]);
         sin[era_] = 0;
     }
 
     // --- Salvation ---
     function heal(uint wad) public note {
-        require(wad <= Joy() && wad <= Woe);
-        Woe = sub(Woe, wad);
+        require(wad <= Joy() && wad <= Woe());
         require(int(mul(wad, ONE)) >= 0);
         VatLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
@@ -126,15 +127,14 @@ contract Vow is DSNote {
 
     // --- Auctions ---
     function flop() public returns (uint id) {
-        require(Woe >= sump);
+        require(Woe() >= sump);
         require(Joy() == 0);
-        Woe = sub(Woe, sump);
         Ash = add(Ash, sump);
         return Fusspot(row).kick(this, uint(-1), sump);
     }
     function flap() public returns (uint id) {
         require(Joy() >= add(add(Awe(), bump), hump));
-        require(Woe == 0);
+        require(Woe() == 0);
         Hopeful(Fusspot(cow).dai()).hope(cow);
         id = Fusspot(cow).kick(address(0), bump, 0);
         Hopeful(Fusspot(cow).dai()).nope(cow);
