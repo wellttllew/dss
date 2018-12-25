@@ -19,6 +19,7 @@ pragma solidity >=0.5.0;
 
 import "ds-note/note.sol";
 
+// 抵押物  
 contract GemLike {
     function transfer(address,uint) public returns (bool);
     function transferFrom(address,address,uint) public returns (bool);
@@ -81,6 +82,8 @@ contract ETHJoin is DSNote {
     }
 }
 
+// https://github.com/makerdao/dss/wiki/Dai 
+// 将 system dai 换成 ERC20 token dai 
 contract DaiJoin is DSNote {
     VatLike public vat;
     GemLike public dai;

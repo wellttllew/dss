@@ -25,15 +25,19 @@ contract Vat {
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
+
+    // CDP types: 每种 cdp 都有一个？ 
     struct Ilk {
         uint256 take;  // ray
         uint256 rate;  // ray
-        uint256 Ink;   // wad
-        uint256 Art;   // wad
+        uint256 Ink;   // wad  这种抵押物，总的抵押物的数量
+        uint256 Art;   // wad  这种抵押物，总的未偿还的 Dai 的数量 
     }
+
+    // 一个 CDP ？ 
     struct Urn {
-        uint256 ink;   // wad
-        uint256 art;   // wad
+        uint256 ink;   // wad 抵押物的数量 
+        uint256 art;   // wad 未偿还的 Dai 
     }
 
     mapping (bytes32 => Ilk)                       public ilks;
@@ -100,19 +104,26 @@ contract Vat {
     }
 
     // --- Fungibility ---
+    // @slip 增加 guy 的  ilk  这种抵押物 
     function slip(bytes32 ilk, bytes32 guy, int256 rad) public note auth {
         gem[ilk][guy] = add(gem[ilk][guy], rad);
     }
+    // @flux ilk 这种抵押物的在 src 和 dst 之间的 “转账”  
+    //       只是，这个 “转账” 是在 VAT 里面进行的 
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 rad) public note auth {
         gem[ilk][src] = sub(gem[ilk][src], rad);
         gem[ilk][dst] = add(gem[ilk][dst], rad);
     }
+    // @move dai 在 src 和 dst 之间的 “转账”，这个也是在 VAT 里面进行的 
     function move(bytes32 src, bytes32 dst, int256 rad) public note auth {
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
     }
 
     // --- CDP ---
+    // @tune  lock dink×ilk.take 的 抵押物，借走 dart×ilk.rate 的 dai ??
+    //        但是为什么增加的 dai 是到了 w 的账上呢？ 
+    //        这个 w 难道就是  DaiJoin 的地址吗？ 
     function tune(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note auth {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
@@ -126,6 +137,7 @@ contract Vat {
         dai[w]    = add(dai[w],    mul(ilk.rate, dart));
         debt      = add(debt,      mul(ilk.rate, dart));
     }
+    // @grab 
     function grab(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note auth {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
